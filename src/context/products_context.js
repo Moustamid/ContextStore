@@ -14,7 +14,14 @@ import {
 } from '../actions';
 
 const initialState = {
-  isSidebarOpen: true,
+  isSidebarOpen: false,
+  products_loading: false,
+  products_error: false,
+  products: [],
+  featured_products: [],
+  single_product_loading: false,
+  single_product_error: false,
+  single_product: {},
 };
 
 const ProductsContext = React.createContext();
@@ -24,6 +31,41 @@ export const ProductsProvider = ({ children }) => {
   //.Reducer Hook :
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  // SECTION:
+  // - fetching the products data :
+
+  const fetchProducts = async (url) => {
+    dispatch({ type: 'GET_PRODUCTS_BEGIN' });
+
+    try {
+      const response = await axios.get(url);
+      const products = response.data;
+      dispatch({ type: 'GET_PRODUCTS_SUCCESS', payload: products });
+    } catch (error) {
+      dispatch({ type: 'GET_PRODUCTS_ERROR' });
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts(url);
+  }, []);
+
+  // SECTION:
+  // - fetching the single product data :
+
+  const fetchSingleProduct = async (url) => {
+    dispatch({ type: 'GET_SINGLE_PRODUCT_BEGIN' });
+
+    try {
+      const response = await axios.get(url);
+      const singleproduct = response.data;
+      dispatch({ type: 'GET_SINGLE_PRODUCT_SUCCESS', payload: singleproduct });
+    } catch (error) {
+      dispatch({ type: 'GET_SINGLE_PRODUCT_ERurlROR' });
+    }
+  };
+
+  // SECTION:
   //. Helper Functions :
 
   const openSidebar = () => {
@@ -34,12 +76,14 @@ export const ProductsProvider = ({ children }) => {
     dispatch({ type: SIDEBAR_CLOSE });
   };
 
+  // SECTION: Provider :
   return (
     <ProductsContext.Provider
       value={{
         ...state,
         openSidebar,
         closeSidebar,
+        fetchSingleProduct,
       }}
     >
       {children}
